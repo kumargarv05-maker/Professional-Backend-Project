@@ -3,14 +3,18 @@
   "version": "1.0.0",
   "description": "a backed project with chai aur code youtube channel",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon scr/index.js"
   },
   "keywords": [
     "backend",
-    "youtube",
+    "youtube",  
     "code"
   ],
   "author": "Garv Rawal",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
 }
