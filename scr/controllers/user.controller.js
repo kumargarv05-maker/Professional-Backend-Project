@@ -247,7 +247,7 @@ const changeCurrentPassword = asyncHandler( async (req, res) => {
 
 })
 
-const getCurrectUser = asyncHandler( async (req, res) => {
+const getCurrentUser = asyncHandler( async (req, res) => {
     return res
     .status(200)
     .json(200, req.user, "Current user fateched succcessfully")
@@ -344,7 +344,7 @@ export {
     logoutUser,
     refreshAccessToken,
     changeCurrentPassword,
-    getCurrectUser,
+    getCurrentUser,
     updateUserDetails,
     updateUserAvatar,
     updateUserCoverImage,
