@@ -145,13 +145,9 @@ const loginUser = asyncHandler( async (req, res) => {
     return res
     .status(200)
     .cookie("accessToken", accessToken, option)
-    .cookie("refreshToken", refreshToken, option)
+    .cookie("refreshToken", refreshToken, option) 
     .json(
-        200,
-        {
-            user: loggedInUser, accessToken, refreshToken
-        },
-        "User Logged In Successfully"
+        new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, "User logged in successfully")
     )
 })
 
@@ -159,8 +155,8 @@ const logoutUser = asyncHandler( async(req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1
             }
         },
         {
@@ -183,24 +179,25 @@ const logoutUser = asyncHandler( async(req, res) => {
 })
 
 const refreshAccessToken = asyncHandler( async (req, res) => {
-    const incomingRefreshToken =req.cookie.refreshToken || req.body.refreshToken
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
     if(!incomingRefreshToken){
         throw new ApiError(401, "unauthorized request")
     }
 
     try {
-        const decodedToken =jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
     
-        const user = User.findById(decodedToken?._id)
+        const user = await User.findById(decodedToken?._id)
     
         if(!user){
             throw new ApiError(401, "Invailid refresh token")
         }
+        console.log("user refresh token :", user.refreshToken)
     
         if (incomingRefreshToken !== user?.refreshToken) {
             throw new ApiError(401, "Refresh Token is Expired or used")
-        }
+        }   
     
         const option = {
             httpOnly: true,
@@ -251,7 +248,9 @@ const changeCurrentPassword = asyncHandler( async (req, res) => {
 const getCurrentUser = asyncHandler( async (req, res) => {
     return res
     .status(200)
-    .json(200, req.user, "Current user fateched succcessfully")
+    .json(
+        new ApiResponse(200, req.user, "Current user fateched succcessfully")
+    )
 })
 
 const updateUserDetails = asyncHandler( async (req, res) => {
@@ -348,16 +347,16 @@ const getUserChannelProfile = asyncHandler( async(req, res) => {
     const channel = await User.aggregate([
         {
             $match: {
-                username: username.toLowerCase()
+                username: username?.toLowerCase()
             }
         },
         {
-        $lookup: {
-            from: "subscriptions",
-            localField: "_id",
-            foreignField: "channel",
-            as: "subscribers"
-            }
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+                }
         },
         {
             $lookup: {
@@ -368,20 +367,20 @@ const getUserChannelProfile = asyncHandler( async(req, res) => {
             }
         },
         {
-        $addFields: {
-            subscriberCount: {
-                $size: "$subscribers"
-            },
-            channelsSubscribedToCount: {
-                $size: "$subscriberTo"
-            },
-            isSubscribed: {
-                 $cond: {
-                    $in: [ req.user?._id, "$subscribers.subscriber"],
-                    then: true,
-                    else: false
+            $addFields: {
+                subscriberCount: {
+                    $size: ["$subscribers"]
+                },
+                channelsSubscribedToCount: {
+                    $size: ["$subscribedTo"]
+                },
+                isSubscribed: {
+                    $cond: {
+                        if: { $in: [ req.user?._id, "$subscribers.subscriber"] },
+                        then: true,
+                        else: false
+                    }
                 }
-            }
             }      
         },
         {
@@ -414,20 +413,20 @@ const getUserHistory = asyncHandler( async (req, res) => {
     const user = await User.aggregate([
         {
             $match: {
-                _id: mongoose.Types.ObjectId(req.user._id)
+                _id: new mongoose.Types.ObjectId(req.user._id)
             }
         },
         {
             $lookup: {
                 from: "videos",
-                LocalField: "watchHistory",
+                localField: "watchHistory",
                 foreignField: "_id",
                 as: "watchHistory",
                 pipeline: [
                     {
                         $lookup: {
                             from: "users",
-                            LocalField: "owner",
+                            localField: "owner",
                             foreignField: "_id",
                             as: "owner",
                             pipeline: [

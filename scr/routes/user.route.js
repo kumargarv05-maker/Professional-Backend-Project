@@ -41,7 +41,7 @@ router.route('/current-user').get(verifyJWT, getCurrentUser)
 
 // patch use for the update only the perticuler fields
 router.route('/update-account').patch(verifyJWT, updateUserDetails)
-router.route('/user-avatar').post().patch(verifyJWT, upload.single("avatar"), updateUserAvatar) 
+router.route('/user-avatar').patch(verifyJWT, upload.single("avatar"), updateUserAvatar) 
 router.route('/cover-image').patch(verifyJWT, upload.single("coverImage"),updateUserCoverImage)
 
 // get used for the fetching the data
