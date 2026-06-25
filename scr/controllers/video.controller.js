@@ -112,6 +112,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         )
 })
 
+<<<<<<< HEAD
 const publishAVideo = asyncHandler(async ( req, res) => {
     const { title, description } = req.body
     console.log("req.body: ", req.body)
@@ -126,6 +127,17 @@ const publishAVideo = asyncHandler(async ( req, res) => {
     const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path
 
     // check the time letency of the video and thumbnail upload to cloudnary
+=======
+const publishVideo = asyncHandler(async ( req, res) => {
+    const { title, decription } = req.body
+
+    if(!title?.trim() || !decription?.trim()){
+        throw new ApiError(400, "Title and decription are required")
+    }
+
+    videoLocalPath = req.files?.videofile?.[0]?.videoLocalPath
+    thumbnailLocalPath = req.files?.videofile?.[0]?.thumbnailLocalPath
+>>>>>>> 715bc62e127371c4e432197470f8edde1e66a131
 
     if(!videoLocalPath){
         throw new ApiError(400, "Video file is required")
@@ -134,6 +146,7 @@ const publishAVideo = asyncHandler(async ( req, res) => {
     if(!thumbnailLocalPath){
         throw new ApiError(400, "Thumbnail file is required")
     }
+<<<<<<< HEAD
 
     // const [videoFile, thumbnail] = await Promise.all([
     //     uploadOnCloudinary(videoLocalPath),
@@ -169,11 +182,17 @@ const publishAVideo = asyncHandler(async ( req, res) => {
     .json(
         new ApiResponse(201, video, "Video publishing Successfully")
     )
+=======
+>>>>>>> 715bc62e127371c4e432197470f8edde1e66a131
 })
 
 
 export {
+<<<<<<< HEAD
     getAllVideos,
     publishAVideo
+=======
+    getAllVideos
+>>>>>>> 715bc62e127371c4e432197470f8edde1e66a131
 }
 
