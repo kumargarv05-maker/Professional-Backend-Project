@@ -32,7 +32,7 @@ const registerUser = asyncHandler( async (req, res) => {
     if(existedUser){
         throw new ApiError(409, "username and email are already existed in the system")
     }
-    // console.log(req.files)
+    console.log(req.files)
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
     // const coverImageLocalPath = req.files?.coverImage[0]?.path;
@@ -71,7 +71,7 @@ const registerUser = asyncHandler( async (req, res) => {
     }
 
     return res.status(201).json(
-        new ApiResponse(200, createdUser, "User created successfully")
+        new ApiResponse(201, createdUser, "User created successfully")
     )
 
 
@@ -277,12 +277,14 @@ const updateUserDetails = asyncHandler( async (req, res) => {
 
 })
 
-const updateUserAvatar = asyncHandler( async (req, res) => {
+const updateUserAvatar = asyncHandler( async (req, res) => { 
     const avatarLocalPath = req.file?.path
 
     if(!avatarLocalPath){
         throw new ApiError(400, "Avatar file is required")
     }
+
+    //TODO delete old image - assgnment
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
@@ -290,7 +292,7 @@ const updateUserAvatar = asyncHandler( async (req, res) => {
         throw new ApiError(400, "Error while uploading avatar")
     }
 
-    const user =await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user._id,
         {
             $set: {
@@ -368,7 +370,7 @@ const getUserChannelProfile = asyncHandler( async(req, res) => {
         },
         {
             $addFields: {
-                subscriberCount: {
+                subscriberCount: {    
                     $size: ["$subscribers"]
                 },
                 channelsSubscribedToCount: {
@@ -431,7 +433,7 @@ const getUserHistory = asyncHandler( async (req, res) => {
                             as: "owner",
                             pipeline: [
                                 {
-                                    // getting only required feilds
+                                    // getting only required fields
                                     $project: {
                                         username: 1,
                                         fullName: 1,
