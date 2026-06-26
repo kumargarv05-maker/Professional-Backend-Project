@@ -25,8 +25,10 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const {
         page = 1,
         limit = 10,
-        query, sortBy,
-        sortType,
+        title,
+        query, 
+        sortBy = "createdAt",
+        sortType = "desc",
         userId
     } = req.query
 
@@ -51,10 +53,10 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
         {
             $lookup: {
-                from: "user",
+                from: "users",    //resole error here uesr to users
                 localField: "owner",
                 foreignField: "_id",
-                as: "wonerDetails",
+                as: "ownerDetails",
                 pipeline: [
                     {
                         $project: {
@@ -94,12 +96,12 @@ const getAllVideos = asyncHandler(async (req, res) => {
         limit: parseInt(limit)
     }
 
-    const videos = await Video.aggregatePaginate([
-        Video.aggregate(pipeline),
-        options
-    ])
+    const videos = await Video.aggregatePaginate(
+        Video.aggregate(pipeline,
+        option)
+    )
 
-    if (!video.docs.length) {
+    if (!videos.docs.length) {
         return res
             .status(200)
             .json(new ApiResponse(200, [], "No video found for this user"))
@@ -135,13 +137,10 @@ const publishAVideo = asyncHandler(async ( req, res) => {
         throw new ApiError(400, "Thumbnail file is required")
     }
 
-    // const [videoFile, thumbnail] = await Promise.all([
-    //     uploadOnCloudinary(videoLocalPath),
-    //     uploadOnCloudinary(thumbnailLocalPath)
-    // ])
-
-    const videoFiles = await uploadOnCloudinary(videoLocalPath)
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+    const [videoFiles, thumbnail] = await Promise.all([
+        uploadOnCloudinary(videoLocalPath),
+        uploadOnCloudinary(thumbnailLocalPath)
+    ])
 
     if(!videoFiles?.url){
         throw new ApiError(500, "Video file upload failed on cloudinary")
