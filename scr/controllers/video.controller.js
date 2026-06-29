@@ -25,7 +25,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const {
         page = 1,
         limit = 10,
-        title,
         query, 
         sortBy = "createdAt",
         sortType = "desc",
@@ -171,8 +170,14 @@ const publishAVideo = asyncHandler(async ( req, res) => {
 })
 
 
+
+
 export {
     getAllVideos,
-    publishAVideo
+    publishAVideo,
+    getVideoById,
+    updateVideo,
+    deleteVideo,
+    togglePublishStatus
 }
 
