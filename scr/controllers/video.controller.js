@@ -2,7 +2,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/apiError.js';
 import { Video } from '../models/video.model.js';
 import { User } from '../models/user.model.js';
-import { uploadOnCloudinary } from '../utils/cloudinary.js';
+import { uploadOnCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js';
 import { ApiResponse } from '../utils/apiResponse.js';
 import mongoose from 'mongoose';
 
@@ -115,8 +115,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 const publishAVideo = asyncHandler(async ( req, res) => {
     const { title, description } = req.body
-    console.log("req.body: ", req.body)
-    console.log("req.files: ", req.files)
 
     if(!title?.trim() || !description?.trim()){
         throw new ApiError(400, "Title and decription are required")
@@ -296,7 +294,65 @@ const getVideoById = asyncHandler(async ( req, res) => {
     )
 })
 
+const updateVideo = asyncHandler(async ( req, res) => {
+    const { videoId } = req.params
 
+    if(!videoId || !mongoose.Types.ObjectId.isValid(videoId)){
+        throw new ApiError(400, "Invalid videoId")
+    }
+
+    const { title, description } = req.body
+    const thumbnailLocalPath = req.file?.path
+
+    if(!title?.trim() && !description?.trim() && !thumbnailLocalPath){
+        throw new ApiError(400, "At least one field is required to update")
+    }
+
+    const existingVideo = await Video.findById(videoId)
+
+    if(!existingVideo){
+        throw new ApiError(404, "Video not found")
+    }
+
+    if(existingVideo.owner.toString() !== req.user._id.toString()){
+        throw new ApiError(403, "You are not autthorized to update this video")
+    }
+
+    let newThumbnailUrl = null
+
+    if(thumbnailLocalPath){
+        const uploadedThumbnail = await uploadOnCloudinary(thumbnailLocalPath)  
+
+        if(!uploadedThumbnail?.url){
+            throw new ApiError(500, "Thumbnail upload failed on cloudinary")
+        }
+
+        newThumbnailUrl = uploadedThumbnail.url
+    }
+
+    const updateFields = {}
+
+    if(title?.trim()) updateFields.title = title.trim()
+    if(description?.trim()) updateFields.description = description.trim()
+    if(newThumbnailUrl) updateFields.thumbnail = newThumbnailUrl
+
+    const updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+        { $set: updateFields },
+        { new: true }
+    )
+
+    if(newThumbnailUrl && existingVideo.thumbnail){
+        await deleteFromCloudinary(existingVideo.thumbnail)
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, updateVideo, "video updated successfully")
+        )
+
+})
 
 
 export {
@@ -304,7 +360,7 @@ export {
     publishAVideo,
     getVideoById,
     updateVideo,
-    deleteVideo,
-    togglePublishStatus
+    // deleteVideo,
+    // togglePublishStatus
 }
 

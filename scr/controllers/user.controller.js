@@ -302,6 +302,10 @@ const updateUserAvatar = asyncHandler( async (req, res) => {
         {new: true}
     ).select("-password")
 
+     if(avatar.url && user.avatar){
+        await deleteFromCloudinary(user.avatar)
+    }
+
     return res
     .status(200)
     .json(
@@ -322,7 +326,7 @@ const updateUserCoverImage = asyncHandler( async (req, res) => {
         throw new ApiError(400, "Error while uploading cover image")
     }
 
-    const user =await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user._id,
         {
             $set: {
@@ -331,6 +335,10 @@ const updateUserCoverImage = asyncHandler( async (req, res) => {
         },
         {new: true}
     ).select("-password")
+
+    if(coverImage.url && user.coverImage){
+        await deleteFromCloudinary(user.coverImage)
+    }
 
     return res
     .status(200)
